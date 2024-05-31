@@ -40,11 +40,6 @@ app.layout = html.Div(
                 dcc.Dropdown(
                     id='time-range-dropdown',
                     options=[
-                        {'label': '1D', 'value': '1d'},
-                        {'label': '5D', 'value': '5d'},
-                        {'label': '1M', 'value': '1mo'},
-                        {'label': '3M', 'value': '3mo'},
-                        {'label': '6M', 'value': '6mo'},
                         {'label': 'YTD', 'value': 'ytd'},
                         {'label': '1Y', 'value': '1y'},
                         {'label': '2Y', 'value': '2y'},
@@ -109,7 +104,7 @@ html.Div([
                 },
                 fixed_rows={'headers': True}
             ),
-            type='graph'
+            type='dot'
         ),
         style={'flex': '1', 'margin': '10px'}  # Adjust margins as needed
     ),
@@ -153,7 +148,7 @@ html.Div([
                 {"name": "Ex-dividend date", "id": "Ex-dividend date"},
                 {"name": "1y target est", "id": "1y target est"},
             ],
-            style_table={'overflowX': 'auto', 'width': '100%'},
+            style_table={'overflowX': 'auto', 'width': '100%', 'margin-bottom': '40px', 'padding': '10px'},
             style_header={
                 'backgroundColor': 'rgb(50, 50, 50)',
                 'fontWeight': 'bold'
@@ -248,4 +243,4 @@ def update_table_1(selected_rows, data):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)
