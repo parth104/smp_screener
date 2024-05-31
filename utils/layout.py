@@ -15,7 +15,7 @@ dark_chart = go.layout.Template({
             'dtick': 'M1',
             'showgrid': False,
             'gridcolor': '#343434',  # Darker grid lines for subtlety
-            'gridwidth': 10,
+            'gridwidth': 2,
             'zerolinecolor': '#444444',  # Dark zero line color
             'zerolinewidth': 2,
             'tickcolor': 'white',  # White ticks to match the font color
@@ -28,7 +28,7 @@ dark_chart = go.layout.Template({
             'tickmode': 'auto',
             'showgrid': False,
             'gridcolor': '#343434',
-            'gridwidth': 10,
+            'gridwidth': 2,
             'zerolinecolor': '#444444',
             'zerolinewidth': 2,
             'tickcolor': 'white',

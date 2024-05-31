@@ -2,11 +2,7 @@ import pandas as pd
 from datetime import timedelta
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import utils.layout
-import plotly.io as pio
 
-# Set default to dark chart
-pio.templates.default = 'dark_chart'
 
 def get_rangebreaks(index):
     # Convert the index to a series so we can use diff
@@ -27,9 +23,11 @@ def get_rangebreaks(index):
     ]
     return rangebreaks
 
+
 def convert_to_trillion(number):
     trillion = number / 1_000_000_000_000
     return f"{trillion:.2f} trillion"
+
 
 def create_stock_chart(data, ticker, stock_info):
 
@@ -62,18 +60,18 @@ def create_stock_chart(data, ticker, stock_info):
         col=1,
     )
     # else:
-        # fig.add_trace(
-        #     go.Candlestick(
-        #         x=data.index,
-        #         open=data["open"],
-        #         high=data["high"],
-        #         low=data["low"],
-        #         close=data["close"],
-        #         name=ticker,
-        #     ),
-        #     row=1,
-        #     col=1,
-        # )
+    # fig.add_trace(
+    #     go.Candlestick(
+    #         x=data.index,
+    #         open=data["open"],
+    #         high=data["high"],
+    #         low=data["low"],
+    #         close=data["close"],
+    #         name=ticker,
+    #     ),
+    #     row=1,
+    #     col=1,
+    # )
 
     # Add moving average traces
     ma_colors = {30: "magenta", 50: "green", 200: "yellow"}
@@ -96,7 +94,7 @@ def create_stock_chart(data, ticker, stock_info):
     # Add volume to the second row
     fig.add_trace(
         go.Bar(x=data.index, y=data["volume"],
-            name="Volume", marker_color="#8C127C"),
+               name="Volume", marker_color="#8C127C"),
         row=2,
         col=1,
     )
@@ -118,9 +116,14 @@ def create_stock_chart(data, ticker, stock_info):
 
     extra_space = timedelta(days=extra_space)
 
-    fig.update_xaxes(range=[data.index.min() - extra_space, max_date + extra_space])
+    fig.update_xaxes(
+        range=[data.index.min() - extra_space, max_date + extra_space])
     fig.update_layout(hovermode="x")
-
+    fig.update_layout(
+        autosize=True,
+        dragmode="zoom",
+        yaxis=dict(fixedrange=True),
+    )
 
     rangebreaks = get_rangebreaks(data.index)
     fig.update_layout(
