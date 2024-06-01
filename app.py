@@ -32,11 +32,11 @@ app.layout = html.Div(
         html.Div(
             children=[
                 html.Button('Refresh Table', id='refresh-button', className='btn btn-primary', n_clicks=0,
-                            style={'border-radius': '10px',}),
+                            style={'border-radius': '10px', 'margin-left': '5px'}),
                 html.Label("Period:", style={
                            'margin-right': '10px', 'color': 'white', 'font-size': '20px',  'margin-left': '800px',
-}),
-                
+                           }),
+
                 dcc.Dropdown(
                     id='time-range-dropdown',
                     options=[
@@ -49,91 +49,94 @@ app.layout = html.Div(
                     value='1y',
                     style={'width': '80px', 'color': 'black'}
                 ),
-                
+
             ],
             style={'display': 'flex', 'justifyContent': 'center',
                    'paddingTop': '20px', 'paddingBottom': '20px'}
         ),
-html.Div([
-    html.Div(
-        dcc.Loading(
-            dash_table.DataTable(
-                id='stock-table',
-                columns=[
-                    {"name": 'Stock Ticker', "id": 'Stock Ticker'},
-                    {"name": 'Signal Name', "id": 'Signal Name'},
-                    {"name": '% Change', "id": '% Change'},
-                ],
-                data=df.to_dict('records'),
-                row_selectable='single',
-                sort_action="native",
-                style_data_conditional=[
-                    {
-                        'if': {'filter_query': '{% Change} >= 0', 'column_id': '% Change'},
-                        'backgroundColor': 'green',
-                        'color': 'white'
-                    },
-                    {
-                        'if': {'filter_query': '{% Change} < 0', 'column_id': '% Change'},
-                        'backgroundColor': 'red',
-                        'color': 'white'
-                    },
-                    {
-                        'if': {'filter_query': '{Signal Name} contains "above"', 'column_id': 'Signal Name'},
-                        'color': 'green'
-                    },
-                    {
-                        'if': {'filter_query': '{Signal Name} contains "below"', 'column_id': 'Signal Name'},
-                        'color': 'red'
-                    }
-                ],
-                style_table={
-                    'overflowX': 'auto',
-                    'width': '90%', 
-                    'height': '60vh',  
-                    'overflowY': 'auto',
-                    'margin': 'auto'  
-                },
-                style_header={
-                    'backgroundColor': 'rgb(50, 50, 50)',
-                    'fontWeight': 'bold'
-                },
-                style_cell={
-                    'backgroundColor': 'rgb(50, 50, 50)',
-                    'color': 'white'
-                },
-                fixed_rows={'headers': True}
+        html.Div([
+            html.Div(
+                dcc.Loading(
+                    dash_table.DataTable(
+                        id='stock-table',
+                        columns=[
+                            {"name": 'Stock Ticker', "id": 'Stock Ticker'},
+                            {"name": 'Signal Name', "id": 'Signal Name'},
+                            {"name": '% Change', "id": '% Change'},
+                        ],
+                        data=df.to_dict('records'),
+                        row_selectable='single',
+                        sort_action="native",
+                        style_data_conditional=[
+                            {
+                                'if': {'filter_query': '{% Change} >= 0', 'column_id': '% Change'},
+                                'backgroundColor': 'green',
+                                'color': 'white'
+                            },
+                            {
+                                'if': {'filter_query': '{% Change} < 0', 'column_id': '% Change'},
+                                'backgroundColor': 'red',
+                                'color': 'white'
+                            },
+                            {
+                                'if': {'filter_query': '{Signal Name} contains "above"', 'column_id': 'Signal Name'},
+                                'color': 'green'
+                            },
+                            {
+                                'if': {'filter_query': '{Signal Name} contains "below"', 'column_id': 'Signal Name'},
+                                'color': 'red'
+                            }
+                        ],
+                        style_table={
+                            'overflowX': 'auto',
+                            'width': '90%',
+                            'height': '60vh',
+                            'overflowY': 'auto',
+                            'margin': 'auto'
+                        },
+                        style_header={
+                            'backgroundColor': 'rgb(50, 50, 50)',
+                            'fontWeight': 'bold'
+                        },
+                        style_cell={
+                            'backgroundColor': 'rgb(50, 50, 50)',
+                            'color': 'white'
+                        },
+                        fixed_rows={'headers': True}
+                    ),
+                    type='dot'
+                ),
+                # Adjust margins as needed
+                style={'flex': '1', 'margin': '10px'}
             ),
-            type='dot'
-        ),
-        style={'flex': '1', 'margin': '10px'}  # Adjust margins as needed
-    ),
 
-    # Right side: Graph
-    html.Div(
-        dcc.Loading(
-            dcc.Graph(
-                id="stock-chart",
-                style={'height': '60vh', 'width': '70vw', 'margin': 'auto'},  # Center the graph horizontally
-                config={
-                    "doubleClick": "reset",
-                    "displayModeBar": True,
-                    "modeBarButtonsToRemove": [
-                        "pan2d",
-                        "select2d",
-                        "lasso2d",
-                        "autoScale2d",
-                        "resetScale2d",
-                    ],
-                },
-                figure={},
+            # Right side: Graph
+            html.Div(
+                dcc.Loading(
+                    dcc.Graph(
+                        id="stock-chart",
+                        # Center the graph horizontally
+                        style={'height': '60vh',
+                               'width': '70vw', 'margin': 'auto'},
+                        config={
+                            "doubleClick": "reset",
+                            "displayModeBar": True,
+                            "modeBarButtonsToRemove": [
+                                "pan2d",
+                                "select2d",
+                                "lasso2d",
+                                "autoScale2d",
+                                "resetScale2d",
+                            ],
+                        },
+                        figure={},
+                    ),
+                    type='graph'
+                ),
+                # Adjust margins as needed
+                style={'flex': '1', 'margin': '10px'}
             ),
-            type='graph'
-        ),
-        style={'flex': '1', 'margin': '10px'}  # Adjust margins as needed
-    ),
-], style={'display': 'flex'})
-,
+        ], style={'display': 'flex'}),
         html.H2('General Info'),
         dash_table.DataTable(
             id='info-table-1',
@@ -148,7 +151,8 @@ html.Div([
                 {"name": "Ex-dividend date", "id": "Ex-dividend date"},
                 {"name": "1y target est", "id": "1y target est"},
             ],
-            style_table={'overflowX': 'auto', 'width': '100%', 'margin-bottom': '40px', 'padding': '10px'},
+            style_table={'overflowX': 'auto', 'width': '100%',
+                         'margin-bottom': '40px', 'padding': '10px'},
             style_header={
                 'backgroundColor': 'rgb(50, 50, 50)',
                 'fontWeight': 'bold'
@@ -167,7 +171,6 @@ html.Div([
 )
 
 
-
 @app.callback(
     Output('stock-chart', 'figure'),
     [Input('stock-table', 'selected_rows'),
@@ -181,14 +184,30 @@ def display_chart(selected_rows, period, data):
 
     if selected_rows is None or len(selected_rows) == 0:
         return go.Figure()
+
+    period_num_rows = {
+        'ytd': 200,
+        '1y': 250,
+        '2y': 500,
+        '5y': 1300,
+        'max': 20000
+    }
+
+    old_period = period
+
+    if period in {'ytd', '1y', '2y', '5y'}:
+        period = '5y'
+
     row = selected_rows[0]
     selected_ticker = data[row]['Stock Ticker']
-    print(selected_ticker)
+    print(selected_ticker, period)
     stock_data, info = fetch_stock_data_yahoo(selected_ticker, period, '1d')
     stock_data['SMA_30'] = talib.SMA(stock_data['close'], timeperiod=30)
     stock_data['SMA_50'] = talib.SMA(stock_data['close'], timeperiod=50)
     stock_data['SMA_200'] = talib.SMA(stock_data['close'], timeperiod=200)
-    stock_data = stock_data.tail(250)
+    # stock_data = stock_data.tail(250)
+    num_rows = period_num_rows.get(old_period, 200) // 1
+    stock_data = stock_data.tail(num_rows)
     fig = create_stock_chart(stock_data, selected_ticker, info)
     fig.update_layout(
         title=f"<a href='https://finance.yahoo.com/quote/{selected_ticker}/'>{selected_ticker}</a>",

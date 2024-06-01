@@ -88,7 +88,7 @@ def get_screen_df():
     start = time.time()
     screened = []
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = executor.map(fetch_stock_data, smp500_tickers[:50])
+        results = executor.map(fetch_stock_data, smp500_tickers)
         for result in results:
             if result:
                 screened.append(result)
