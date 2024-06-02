@@ -38,49 +38,52 @@ def check_screen(stock_data):
 
 def fetch_stock_data(ticker):
 
-    stock_data, info = fetch_stock_data_yahoo(ticker, '1y', '1d')
-    # stock_data = data.history(period='1y', interval='1d')
-    stock_data['SMA_30'] = talib.SMA(stock_data['close'], timeperiod=30)
-    stock_data['SMA_50'] = talib.SMA(stock_data['close'], timeperiod=50)
-    stock_data['SMA_200'] = talib.SMA(stock_data['close'], timeperiod=200)
-    if stock_data.empty:
+    try:
+        stock_data, info = fetch_stock_data_yahoo(ticker, '1y', '1d')
+        # stock_data = data.history(period='1y', interval='1d')
+        stock_data['SMA_30'] = talib.SMA(stock_data['close'], timeperiod=30)
+        stock_data['SMA_50'] = talib.SMA(stock_data['close'], timeperiod=50)
+        stock_data['SMA_200'] = talib.SMA(stock_data['close'], timeperiod=200)
+        if stock_data.empty:
+            return None
+        is_true, signal = check_screen(stock_data)
+        if is_true:
+            # print(data.info)
+            last_data = stock_data.iloc[-1]
+            data_dict = {
+                'Signal Time': dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'Signal Name': signal,
+                'Stock Ticker': ticker,
+                'Stock Name': info.get('longName', ''),
+                'Current Price': info.get('currentPrice', ''),
+                '% Change': ((last_data['close'] / info.get('previousClose') - 1) * 100).round(2),
+                # 'Sector': data.info.get('sector', ''),
+                # 'Industry': data.info.get('industry', ''),
+                # 'Market Cap': data.info.get('marketCap', ''),
+                # 'Previous Close': data.info.get('previousClose', ''),
+                # '50-day Average Volume': data.info.get('averageVolume', ''),
+                # 'EPS': data.info.get('trailingEps', ''),
+                # 'PE Ratio': data.info.get('trailingPE', ''),
+                # 'Forward PE Ratio': data.info.get('forwardPE', ''),
+                # 'PEG Ratio': data.info.get('pegRatio', ''),
+                # 'Price to Sales Ratio': data.info.get('priceToSalesTrailing12Months', ''),
+                # 'Price to Book Ratio': data.info.get('priceToBook', ''),
+                # 'Price to Cashflow Ratio': data.info.get('priceToCashflow', ''),
+                # 'Enterprise Value': data.info.get('enterpriseValue', ''),
+                # 'Enterprise to Revenue Ratio': data.info.get('enterpriseToRevenue', ''),
+                # 'Enterprise to EBITDA Ratio': data.info.get('enterpriseToEbitda', ''),
+                # 'Beta': data.info.get('beta', ''),
+                # '52-week High': data.info.get('fiftyTwoWeekHigh', ''),
+                # '52-week Low': data.info.get('fiftyTwoWeekLow', ''),
+                # 'Dividend Rate': data.info.get('dividendRate', ''),
+                # 'Dividend Yield': data.info.get('dividendYield', ''),
+                # 'Ex-Dividend Date': data.info.get('exDividendDate', ''),
+                # '1y Target Estimate': data.info.get('targetMeanPrice', ''),
+                # 'Screened': True
+            }
+            return data_dict
+    except Exception as e:
         return None
-    is_true, signal = check_screen(stock_data)
-    if is_true:
-        # print(data.info)
-        last_data = stock_data.iloc[-1]
-        data_dict = {
-            'Signal Time': dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'Signal Name': signal,
-            'Stock Ticker': ticker,
-            'Stock Name': info.get('longName', ''),
-            'Current Price': info.get('currentPrice', ''),
-            '% Change': ((last_data['close'] / info.get('previousClose') - 1) * 100).round(2),
-            # 'Sector': data.info.get('sector', ''),
-            # 'Industry': data.info.get('industry', ''),
-            # 'Market Cap': data.info.get('marketCap', ''),
-            # 'Previous Close': data.info.get('previousClose', ''),
-            # '50-day Average Volume': data.info.get('averageVolume', ''),
-            # 'EPS': data.info.get('trailingEps', ''),
-            # 'PE Ratio': data.info.get('trailingPE', ''),
-            # 'Forward PE Ratio': data.info.get('forwardPE', ''),
-            # 'PEG Ratio': data.info.get('pegRatio', ''),
-            # 'Price to Sales Ratio': data.info.get('priceToSalesTrailing12Months', ''),
-            # 'Price to Book Ratio': data.info.get('priceToBook', ''),
-            # 'Price to Cashflow Ratio': data.info.get('priceToCashflow', ''),
-            # 'Enterprise Value': data.info.get('enterpriseValue', ''),
-            # 'Enterprise to Revenue Ratio': data.info.get('enterpriseToRevenue', ''),
-            # 'Enterprise to EBITDA Ratio': data.info.get('enterpriseToEbitda', ''),
-            # 'Beta': data.info.get('beta', ''),
-            # '52-week High': data.info.get('fiftyTwoWeekHigh', ''),
-            # '52-week Low': data.info.get('fiftyTwoWeekLow', ''),
-            # 'Dividend Rate': data.info.get('dividendRate', ''),
-            # 'Dividend Yield': data.info.get('dividendYield', ''),
-            # 'Ex-Dividend Date': data.info.get('exDividendDate', ''),
-            # '1y Target Estimate': data.info.get('targetMeanPrice', ''),
-            # 'Screened': True
-        }
-        return data_dict
     return None
 
 
@@ -88,7 +91,7 @@ def get_screen_df():
     start = time.time()
     screened = []
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = executor.map(fetch_stock_data, ALL_TICKERS[:50])
+        results = executor.map(fetch_stock_data, ALL_TICKERS)
         for result in results:
             if result:
                 screened.append(result)
@@ -130,13 +133,13 @@ def get_stock_info(ticker):
     data_dict = {
         'Previous close': stock_info.get('previousClose'),
         'Open': stock_info.get('open'),
-        'Bid': f"{stock_info.get('bid', 0)} x {stock_info.get('bidSize', 0)}",
-        'Ask': f"{stock_info.get('ask', 0)} x {stock_info.get('askSize', 0)}",
+        # 'Bid': f"{stock_info.get('bid', 0)} x {stock_info.get('bidSize', 0)}",
+        # 'Ask': f"{stock_info.get('ask', 0)} x {stock_info.get('askSize', 0)}",
         # 'Day\'s range': f"{stock_info.get('dayLow')} - {stock_info.get('dayHigh')}",
         # '52-week range': f"{stock_info.get('fiftyTwoWeekLow')} - {stock_info.get('fiftyTwoWeekHigh')}",
         # 'Volume': stock_info.get('volume'),
         # 'Avg. volume': stock_info.get('averageVolume'),
-        'Market cap': f"{stock_info.get('marketCap')}, {stock_info.get('currency')}",
+        'Market cap': f"{convert_to_billions_or_trillions(stock_info.get('marketCap'))}, {stock_info.get('currency')}",
         'Beta (5Y monthly)': stock_info.get('beta'),
         # 'PE ratio (TTM)': stock_info.get('trailingPE'),
         # 'EPS (TTM)': stock_info.get('trailingEps'),
@@ -155,6 +158,17 @@ def convert_epoch_to_date_string(epoch_time):
     elif isinstance(epoch_time, (int, float)):
         return datetime.fromtimestamp(epoch_time).strftime('%b %d, %Y')
     return 'N/A'
+
+def convert_to_billions_or_trillions(amount):
+    amount = float(amount)
+    if amount >= 1_000_000_000_000:
+        return f"{amount / 1_000_000_000_000:.2f} Trillion"
+    elif amount >= 1_000_000_000:
+        return f"{amount / 1_000_000_000:.2f} Billion"
+    elif amount >= 1_000_000:
+        return f"{amount / 1_000_000:.2f} Million"
+    else:
+        return f"{amount}"
 
 if __name__ == '__main__':
     print(get_screen_df())
