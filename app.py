@@ -151,7 +151,7 @@ app.layout = html.Div(
                         type='graph'
                     ),
                     dbc.Table(id='info-table', bordered=True, class_name='table table-dark table-striped',
-                              hover=True, striped=True, size='sm', style={'margin-left': '30%', 'width': '60%'}),
+                              hover=True, striped=True, size='sm', style={'width': '70vw', 'margin': 'auto'}),
                     # Adjust margins as needed
                 ],
                 style={'flex': '1', 'margin': '10px'}
