@@ -40,6 +40,8 @@ app.layout = html.Div(
                 dcc.Dropdown(
                     id='time-range-dropdown',
                     options=[
+                        {'label': '3M', 'value': '3mo'},
+                        {'label': '6M', 'value': '6mo'},
                         {'label': 'YTD', 'value': 'ytd'},
                         {'label': '1Y', 'value': '1y'},
                         {'label': '2Y', 'value': '2y'},
@@ -119,10 +121,10 @@ app.layout = html.Div(
                         style={'height': '60vh',
                                'width': '70vw', 'margin': 'auto'},
                         config={
+                            "scrollZoom": True,
                             "doubleClick": "reset",
                             "displayModeBar": True,
                             "modeBarButtonsToRemove": [
-                                "pan2d",
                                 "select2d",
                                 "lasso2d",
                                 "autoScale2d",
@@ -174,18 +176,20 @@ app.layout = html.Div(
 @app.callback(
     Output('stock-chart', 'figure'),
     [Input('stock-table', 'selected_rows'),
-     Input('time-range-dropdown', 'value')],
+     Input('time-range-dropdown', 'value'),
+    ],
     [
         State('stock-table', 'data'),
         # State('time-range-dropdown', 'value'),
     ]
 )
 def display_chart(selected_rows, period, data):
-
     if selected_rows is None or len(selected_rows) == 0:
         return go.Figure()
 
     period_num_rows = {
+        '3mo': 65,
+        '6mo': 125,
         'ytd': 200,
         '1y': 250,
         '2y': 500,
@@ -194,8 +198,10 @@ def display_chart(selected_rows, period, data):
     }
 
     old_period = period
-
-    if period in {'ytd', '1y', '2y', '5y'}:
+    
+    if period in {'3mo', '6mo', 'ytd', '1y'}:
+        period = '2y'
+    elif period in {'2y', '5y'}:
         period = '5y'
 
     row = selected_rows[0]
@@ -210,6 +216,7 @@ def display_chart(selected_rows, period, data):
     stock_data = stock_data.tail(num_rows)
     fig = create_stock_chart(stock_data, selected_ticker, info)
     fig.update_layout(
+        autosize=True,
         title=f"<a href='https://finance.yahoo.com/quote/{selected_ticker}/'>{selected_ticker}</a>",
         #   xaxis_title='Date', yaxis_title='Price'
     )
@@ -262,4 +269,4 @@ def update_table_1(selected_rows, data):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=False)
+    app.run_server(debug=True)

@@ -1,5 +1,5 @@
 import yfinance as yf
-from smp_tickers import smp500_tickers, india_stocks
+from smp_tickers import ALL_TICKERS
 from utils.data_fetching import fetch_stock_data_yahoo, fetch_stock_info_yahoo
 from nifty50_tickers import nifty50_tickers
 import talib
@@ -88,7 +88,7 @@ def get_screen_df():
     start = time.time()
     screened = []
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = executor.map(fetch_stock_data, smp500_tickers)
+        results = executor.map(fetch_stock_data, ALL_TICKERS[:50])
         for result in results:
             if result:
                 screened.append(result)

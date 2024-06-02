@@ -33,7 +33,7 @@ def create_stock_chart(data, ticker, stock_info):
 
     # Create subplots
     num_subplots = 2
-    candlestick_height = 0.90
+    candlestick_height = 0.85
     remaining_height = (1 - candlestick_height) / (num_subplots - 1)
     subplot_heights = [candlestick_height] + \
         [remaining_height] * (num_subplots - 1)
@@ -108,6 +108,8 @@ def create_stock_chart(data, ticker, stock_info):
 
     max_date = data.index.max()
     min_date = data.index.min()
+    min_close = data['close'].min() - 25
+    max_close = data['close'].max() + 25
     date_range = max_date - min_date
     extra_space = date_range.days // 20
 
@@ -115,14 +117,11 @@ def create_stock_chart(data, ticker, stock_info):
         extra_space = 1
 
     extra_space = timedelta(days=extra_space)
-
     fig.update_xaxes(
         range=[data.index.min() - extra_space, max_date + extra_space])
-    fig.update_layout(hovermode="x")
     fig.update_layout(
-        autosize=True,
-        dragmode="zoom",
-        yaxis=dict(fixedrange=True),
+        hovermode="x",
+        yaxis=dict(range=[min_close, max_close])
     )
 
     rangebreaks = get_rangebreaks(data.index)
