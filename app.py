@@ -184,7 +184,6 @@ def display_chart(selected_rows, period, load_chart, data, selected_ticker):
 
     ctx = dash.callback_context
     button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-    print("button_id", button_id)
     if button_id == 'load-chart':
         if selected_ticker is None:
             return go.Figure()
@@ -196,15 +195,13 @@ def display_chart(selected_rows, period, load_chart, data, selected_ticker):
     else:
         return go.Figure()
 
-    print(selected_ticker, period)
-
     period_num_rows = {
         '3mo': 65,
-        '6mo': 125,
+        '6mo': 120,
         'ytd': 200,
         '1y': 250,
         '2y': 500,
-        '5y': 1300,
+        '5y': 1265,
         'max': 20000
     }
 
@@ -212,7 +209,7 @@ def display_chart(selected_rows, period, load_chart, data, selected_ticker):
     if period in {'3mo', '6mo', 'ytd', '1y'}:
         period = '2y'
     elif period in {'2y', '5y'}:
-        period = '5y'
+        period = 'max'
 
     stock_data, info = fetch_stock_data_yahoo(selected_ticker, period, '1d')
     stock_data['SMA_30'] = talib.SMA(stock_data['close'], timeperiod=30)
@@ -250,7 +247,6 @@ def update_stock_name_suggestions(value):
     ]
 )
 def update_data(intervals, n):
-    print("intervals", intervals)
     df = get_screen_df()
     return df.to_dict('records')
 
@@ -270,7 +266,6 @@ def update_info_table(selected_rows, n, data, selected_ticker):
 
     ctx = dash.callback_context
     button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-    print("button_id", button_id)
     if button_id == 'load-chart':
         if selected_ticker is None:
             return html.Tbody([])

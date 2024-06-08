@@ -106,10 +106,13 @@ def create_stock_chart(data, ticker, stock_info):
         showlegend=False,  # Hide the legend
     )
 
+    padding_factor = 0.05
+    range_close = data['close'].max() - data['close'].min()
+    padding = range_close * padding_factor
     max_date = data.index.max()
     min_date = data.index.min()
-    min_close = data['close'].min() - 25
-    max_close = data['close'].max() + 25
+    min_close = data['close'].min() - padding
+    max_close = data['close'].max() + padding
     date_range = max_date - min_date
     extra_space = date_range.days // 20
 
