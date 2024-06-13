@@ -13,11 +13,12 @@ import plotly.io as pio
 # Set default to dark chart
 pio.templates.default = 'plotly_dark'
 
-server=app.server
 
 # Initialize the app
 external_stylesheets = [dbc.themes.COSMO]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+server=app.server
+
 
 chart_container_style = {
     "padding": "20px",
