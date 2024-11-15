@@ -1,6 +1,7 @@
 import yfinance as yf
-from smp_tickers import ALL_TICKERS
-from utils.data_fetching import fetch_stock_data_yahoo, fetch_stock_info_yahoo
+from smp_tickers import ALL_TICKERS, russell500_tickers
+from alpha_vantage.timeseries import TimeSeries
+from utils.data_fetching import fetch_stock_info_yahoo
 from nifty50_tickers import nifty50_tickers
 import talib
 import concurrent.futures
@@ -8,6 +9,8 @@ import time
 import pandas as pd
 import datetime as dt
 from datetime import datetime
+
+ts = TimeSeries(key='API_KEY', output_format='pandas')
 
 def check_screen(stock_data):
     try:
@@ -26,10 +29,10 @@ def check_screen(stock_data):
         if today['SMA_30'] > today['SMA_200'] and yesterday['SMA_30'] < yesterday['SMA_200']:
             return True, '30 cross 200 above'
         # Check if the Close price cross down 200-day SMA since previous day
-        if today['close'] < today['SMA_200'] and yesterday['close'] > yesterday['SMA_200']:
+        if today['4. close'] < today['SMA_200'] and yesterday['4. close'] > yesterday['SMA_200']:
             return True, 'Last below 200'
         # Check if the close cross up 200-day SMA since previous day
-        if today['close'] > today['SMA_200'] and yesterday['close'] < yesterday['SMA_200']:
+        if today['4. close'] > today['SMA_200'] and yesterday['4. close'] < yesterday['SMA_200']:
             return True, 'Last above 200'
     except Exception as e:
         print("Error in check_screen:", e)
@@ -39,50 +42,27 @@ def check_screen(stock_data):
 def fetch_stock_data(ticker):
 
     try:
-        stock_data, info = fetch_stock_data_yahoo(ticker, '1y', '1d')
-        # stock_data = data.history(period='1y', interval='1d')
-        stock_data['SMA_30'] = talib.SMA(stock_data['close'], timeperiod=30)
-        stock_data['SMA_50'] = talib.SMA(stock_data['close'], timeperiod=50)
-        stock_data['SMA_200'] = talib.SMA(stock_data['close'], timeperiod=200)
+        stock_data, metadata = ts.get_daily(ticker, outputsize='full')
+        stock_data['SMA_30'] = talib.SMA(stock_data['4. close'], timeperiod=30)
+        stock_data['SMA_50'] = talib.SMA(stock_data['4. close'], timeperiod=50)
+        stock_data['SMA_200'] = talib.SMA(stock_data['4. close'], timeperiod=200)
         if stock_data.empty:
             return None
         is_true, signal = check_screen(stock_data)
+        print(is_true, signal)
         if is_true:
-            # print(data.info)
             last_data = stock_data.iloc[-1]
+            prev_data = stock_data.iloc[-2]
             data_dict = {
                 'Signal Time': dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 'Signal Name': signal,
                 'Stock Ticker': ticker,
-                'Stock Name': info.get('longName', ''),
-                'Current Price': info.get('currentPrice', ''),
-                '% Change': ((last_data['close'] / info.get('previousClose') - 1) * 100).round(2),
-                # 'Sector': data.info.get('sector', ''),
-                # 'Industry': data.info.get('industry', ''),
-                # 'Market Cap': data.info.get('marketCap', ''),
-                # 'Previous Close': data.info.get('previousClose', ''),
-                # '50-day Average Volume': data.info.get('averageVolume', ''),
-                # 'EPS': data.info.get('trailingEps', ''),
-                # 'PE Ratio': data.info.get('trailingPE', ''),
-                # 'Forward PE Ratio': data.info.get('forwardPE', ''),
-                # 'PEG Ratio': data.info.get('pegRatio', ''),
-                # 'Price to Sales Ratio': data.info.get('priceToSalesTrailing12Months', ''),
-                # 'Price to Book Ratio': data.info.get('priceToBook', ''),
-                # 'Price to Cashflow Ratio': data.info.get('priceToCashflow', ''),
-                # 'Enterprise Value': data.info.get('enterpriseValue', ''),
-                # 'Enterprise to Revenue Ratio': data.info.get('enterpriseToRevenue', ''),
-                # 'Enterprise to EBITDA Ratio': data.info.get('enterpriseToEbitda', ''),
-                # 'Beta': data.info.get('beta', ''),
-                # '52-week High': data.info.get('fiftyTwoWeekHigh', ''),
-                # '52-week Low': data.info.get('fiftyTwoWeekLow', ''),
-                # 'Dividend Rate': data.info.get('dividendRate', ''),
-                # 'Dividend Yield': data.info.get('dividendYield', ''),
-                # 'Ex-Dividend Date': data.info.get('exDividendDate', ''),
-                # '1y Target Estimate': data.info.get('targetMeanPrice', ''),
-                # 'Screened': True
+                '% Change': ((last_data['4. close'] / prev_data['4. close'] - 1) * 100).round(2)
             }
             return data_dict
     except Exception as e:
+        print(ticker, e)
+
         return None
     return None
 
@@ -91,12 +71,15 @@ def get_screen_df():
     start = time.time()
     screened = []
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = executor.map(fetch_stock_data, ALL_TICKERS)
-        for result in results:
-            if result:
-                screened.append(result)
-                print(f"Stock {result} passed the screen.")
-    # print(screened)
+        # Make request in chunk of 50 and take 5 sec sleep
+        for i in range(0, 20, 50):
+        # for i in range(0, len(ALL_TICKERS), 50):
+            results = executor.map(fetch_stock_data, ALL_TICKERS[i:i+50])
+            for result in results:
+                if result:
+                    screened.append(result)
+                    print(f"Stock {result} passed the screen.")
+            time.sleep(5)
     print(f"Total stocks passed the screen: {len(screened)}")
     end = time.time()
     print(f"Time taken to process  {end-start:.2f} seconds.")
@@ -105,44 +88,12 @@ def get_screen_df():
     return df
 
 def get_stock_info(ticker):
-    data = yf.Ticker(ticker)
     stock_info = fetch_stock_info_yahoo(ticker)
-    # data_dict = {
-    #     'Stock Ticker': ticker,
-    #     'Stock Name': data.info.get('longName', ''),
-    #     'Current Price': data.info.get('currentPrice', ''),
-    #     'Sector': data.info.get('sector', ''),
-    #     'Industry': data.info.get('industry', ''),
-    #     'Market Cap': data.info.get('marketCap', ''),
-    #     'Previous Close': data.info.get('previousClose', ''),
-    #     '50-day Average Volume': data.info.get('averageVolume', ''),
-    #     'EPS': data.info.get('trailingEps', ''),
-    #     'PE Ratio': data.info.get('trailingPE', ''),
-    #     'Forward PE Ratio': data.info.get('forwardPE', ''),
-    #     'PEG Ratio': data.info.get('pegRatio', ''),
-    #     'Price to Sales Ratio': data.info.get('priceToSalesTrailing12Months', ''),
-    #     'Price to Book Ratio': data.info.get('priceToBook', ''),
-    #     'Price to Cashflow Ratio': data.info.get('priceToCashflow', ''),
-    #     'Enterprise Value': data.info.get('enterpriseValue', ''),
-    #     'Enterprise to Revenue Ratio': data.info.get('enterpriseToRevenue', ''),
-    #     'Enterprise to EBITDA Ratio': data.info.get('enterpriseToEbitda', ''),
-    #     'Beta': data.info.get('beta', ''),
-    #     '52-week High': data.info.get('fiftyTwoWeekHigh', ''),
-    #     '52-week Low': data.info.get('fiftyTwoWeekLow', ''),
-    # }
     data_dict = {
         'Previous close': stock_info.get('previousClose'),
         'Open': stock_info.get('open'),
-        # 'Bid': f"{stock_info.get('bid', 0)} x {stock_info.get('bidSize', 0)}",
-        # 'Ask': f"{stock_info.get('ask', 0)} x {stock_info.get('askSize', 0)}",
-        # 'Day\'s range': f"{stock_info.get('dayLow')} - {stock_info.get('dayHigh')}",
-        # '52-week range': f"{stock_info.get('fiftyTwoWeekLow')} - {stock_info.get('fiftyTwoWeekHigh')}",
-        # 'Volume': stock_info.get('volume'),
-        # 'Avg. volume': stock_info.get('averageVolume'),
         'Market cap': f"{convert_to_billions_or_trillions(stock_info.get('marketCap'))}, {stock_info.get('currency')}",
         'Beta (5Y monthly)': stock_info.get('beta'),
-        # 'PE ratio (TTM)': stock_info.get('trailingPE'),
-        # 'EPS (TTM)': stock_info.get('trailingEps'),
         'Earnings date': stock_info.get('next_earning_date', ''),
         'Forward dividend & yield': f"{stock_info.get('dividendRate')} ({round(stock_info.get('dividendYield', 0) * 100, 2)} %)",
         'Ex-dividend date': convert_epoch_to_date_string(stock_info.get('exDividendDate', '')),

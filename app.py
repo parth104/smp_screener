@@ -105,8 +105,8 @@ app.layout = html.Div(
                         ],
                         style_table={
                             'overflowX': 'auto',
-                            'width': '100%',
-                            'height': '100%',
+                            'width': '30vw',
+                            'height': '90vh',
                             'overflowY': 'auto',
                             'margin': 'auto'
                         },
